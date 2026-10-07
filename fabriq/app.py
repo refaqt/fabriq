@@ -11,9 +11,11 @@ from fastapi.staticfiles import StaticFiles
 
 from fabriq import __version__
 from fabriq.core import registry
+from fabriq.core.changesets import ChangeSets
 from fabriq.core.doqs_bridge import DoqsError, load_doqs
 from fabriq.core.events import Broker
 from fabriq.core.jobs import JobRunner
+from fabriq.core.locks import LockKeeper, open_documents
 from fabriq.core.workspace import Workspace
 
 STATIC = Path(__file__).resolve().parent / "static"
@@ -29,6 +31,9 @@ class State:
         self.modules: dict[str, registry.ModuleManifest] = {}
         #: Reports of commands that answered at once (not jobs), newest last.
         self.recent_reports: list[dict] = []
+        self.locks = LockKeeper(
+            workspace.local_dir() / "locks.json", self.broker, ChangeSets(workspace).repositories,
+            documents=lambda: open_documents(workspace.settings.rpc_url))
         self.doqs = None
         self.doqs_error: str | None = None
         try:
@@ -43,7 +48,10 @@ def create_app(workspace: Workspace) -> FastAPI:
     @asynccontextmanager
     async def lifespan(app: FastAPI):
         state.broker.bind(asyncio.get_running_loop())
+        if workspace.settings.lfs_locks:
+            state.locks.start()
         yield
+        state.locks.stop()
 
     app = FastAPI(title="fabriq", version=__version__, lifespan=lifespan)
     app.state.fabriq = state

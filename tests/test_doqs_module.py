@@ -40,6 +40,14 @@ def test_workspace_and_modules(client: TestClient):
     assert [n["label"] for n in nav] == ["Workspace", "Modules", "Parts library", "Git"]
 
 
+def test_the_lock_status_lists_every_repository(client: TestClient):
+    locks = client.get("/api/doqs/git/locks").json()
+    assert locks["enabled"] is True
+    for repo in locks["repos"].values():
+        assert repo["mine"] == [] and repo["conflicts"] == []
+    assert client.post("/api/doqs/git/locks/unlock", json={"repo": "nowhere", "file": "a.FCStd"}).status_code == 404
+
+
 def test_the_read_model_sees_modules_bom_and_libraries(client: TestClient):
     model = client.get("/api/doqs/model").json()
     slugs = {m["slug"] for m in model["modules"]}

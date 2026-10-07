@@ -18,6 +18,11 @@ uv tool install fabriq      # once; pipx works too
 fabriq                      # finds the repository root, starts the server, opens the browser
 ```
 
+You also need [Git LFS](https://git-lfs.com) (`git lfs install`). fabriq uses it to lock a
+FreeCAD file while you change it, so a colleague does not change the same file at the same
+time. Set `FABRIQ_LFS_LOCKS=0`, or `lfs_locks = false` under `[git]` in
+`.fabriq/local.toml`, to turn the locks off.
+
 For development:
 
 ```bash

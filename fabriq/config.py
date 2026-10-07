@@ -26,6 +26,8 @@ class Settings:
     freecad_mode: str = "auto"
     rpc_url: str = "http://127.0.0.1:9875"
     github_user: str = ""
+    #: Take the Git LFS lock on a FreeCAD file as soon as it changes.
+    lfs_locks: bool = True
 
     @classmethod
     def load(cls, root: Path | None = None) -> "Settings":
@@ -52,6 +54,7 @@ class Settings:
                 settings.freecad_mode = str(freecad.get("mode", settings.freecad_mode))
                 settings.rpc_url = str(freecad.get("rpc_url", settings.rpc_url))
                 settings.github_user = str(data.get("github", {}).get("user", ""))
+                settings.lfs_locks = bool(data.get("git", {}).get("lfs_locks", settings.lfs_locks))
         env = os.environ
         settings.host = env.get("FABRIQ_HOST", settings.host)
         settings.port = int(env.get("FABRIQ_PORT", settings.port))
@@ -60,4 +63,6 @@ class Settings:
         settings.freecad = env.get("FABRIQ_FREECAD", settings.freecad)
         settings.freecad_mode = env.get("FABRIQ_FREECAD_MODE", settings.freecad_mode)
         settings.rpc_url = env.get("FABRIQ_RPC_URL", settings.rpc_url)
+        if env.get("FABRIQ_LFS_LOCKS") is not None:
+            settings.lfs_locks = env["FABRIQ_LFS_LOCKS"] not in ("0", "false", "no", "")
         return settings

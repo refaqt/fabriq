@@ -20,7 +20,7 @@ def build_router(app) -> APIRouter:
     workspace = state.workspace
     model = ReadModel(workspace, state.doqs)
     state.readmodel = model
-    changesets = ChangeSets(workspace)
+    changesets = ChangeSets(workspace, locks=state.locks if workspace.settings.lfs_locks else None)
 
     def remember(report: dict) -> dict:
         state.recent_reports.append(report)
@@ -47,6 +47,7 @@ def build_router(app) -> APIRouter:
     def changed() -> None:
         model.invalidate()
         state.broker.publish({"type": "model.changed"})
+        state.locks.poke()
 
     def finish(fn):
         """Run a job function, then tell the browser the model changed."""
@@ -92,6 +93,21 @@ def build_router(app) -> APIRouter:
             if lib.public:
                 repos[lib.name] = lib.public
         return {name: repo_status(path) for name, path in repos.items()}
+
+    @router.get("/git/locks")
+    def git_locks(fresh: bool = False) -> dict:
+        return {"enabled": workspace.settings.lfs_locks, "repos": state.locks.status(fresh=fresh)}
+
+    @router.post("/git/locks/unlock")
+    def git_unlock(body: dict[str, Any]) -> dict:
+        repos = state.locks.status()
+        repo = repos.get(str(body.get("repo")))
+        if repo is None:
+            raise HTTPException(404, f"no repository {body.get('repo')}")
+        notes = state.locks.release(Path(repo["path"]), [str(body.get("file"))])
+        if not notes:
+            raise HTTPException(400, f"you do not hold the lock on {body.get('file')}")
+        return {"notes": notes}
 
     # --- write: fast ones answer at once ---------------------------------
     @router.post("/modules")
