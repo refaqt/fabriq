@@ -32,7 +32,7 @@ export function LibraryPage() {
                     <span><Badge tone={termsTone(p.where.public?.terms ?? p.where.mounted?.terms)}>{p.where.public?.terms ?? p.where.mounted?.terms ?? "—"}</Badge>{" "}
                       <Badge tone={termsTone(p.where.private?.terms)}>{p.where.private?.terms ?? "—"}</Badge></span>,
                     Object.values(p.where).some((w) => w.cad_exists) ? <Badge tone="ok">yes</Badge> : <Badge tone="warn">none</Badge>,
-                    (p.where.private?.frames ?? p.where.public?.frames ?? p.where.mounted?.frames ?? []).map((f) => <Badge key={f.name} tone={f.label.startsWith("IF_") ? "ok" : "bad"}>{f.label}</Badge>),
+                    (Object.values(p.where).map((w) => w.frames).find((frames) => frames.length > 0) ?? []).map((f) => <Badge key={f.name} tone={f.label.startsWith("IF_") ? "ok" : "bad"}>{f.label}</Badge>),
                     <Button kind="secondary" onClick={() => setSelected({ library: lib.name, part: p })}>Wrap…</Button>,
                   ])} />
                 </div>

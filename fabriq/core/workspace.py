@@ -109,7 +109,10 @@ def discover_libraries(root: Path, settings: Settings) -> list[LibraryCheckout]:
     found: dict[str, LibraryCheckout] = {}
     for marker in sorted(root.rglob("library.toml")):
         mounted = marker.parent
-        if mounted == root or ".git" in mounted.parts or mounted.parts[len(root.parts)] in ("doqs", ".agents"):
+        inner = mounted.relative_to(root).parts
+        # Skip the tooling submodules at any depth (a mounted library carries
+        # its own doqs, with test fixtures that are libraries too).
+        if mounted == root or any(p in (".git", "doqs", ".agents", "tests", "node_modules") for p in inner):
             continue
         name = mounted.name
         found[name] = LibraryCheckout(name=name, mounted=mounted, public=None, private=None)

@@ -27,6 +27,8 @@ class State:
         self.broker = Broker()
         self.jobs = JobRunner(workspace.local_dir() / "jobs", self.broker)
         self.modules: dict[str, registry.ModuleManifest] = {}
+        #: Reports of commands that answered at once (not jobs), newest last.
+        self.recent_reports: list[dict] = []
         self.doqs = None
         self.doqs_error: str | None = None
         try:

@@ -145,5 +145,7 @@ export const api = {
       headers: { "Content-Type": "application/json" },
       body: body === undefined ? undefined : JSON.stringify(body),
     }).then((r) => handle<T>(r)),
+  put: <T>(path: string, body?: unknown) =>
+    fetch(path, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body ?? {}) }).then((r) => handle<T>(r)),
   upload: <T>(path: string, form: FormData) => fetch(path, { method: "POST", body: form }).then((r) => handle<T>(r)),
 };
