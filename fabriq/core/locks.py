@@ -98,7 +98,7 @@ class LockKeeper:
         self._wake = threading.Event()
         self._stop = threading.Event()
         self._thread: threading.Thread | None = None
-        self._verified = 0.0
+        self._verified: float | None = None
         #: repo path -> file -> {"reason", "since", "id"}
         self.held: dict[str, dict[str, dict]] = {}
         #: repo path -> the colleagues' locks, as the server last said
@@ -176,7 +176,7 @@ class LockKeeper:
         with self._mutex:
             changed = False
             wanted = self.changed_files()
-            if time.monotonic() - self._verified > self.verify_every:
+            if self._verified is None or time.monotonic() - self._verified > self.verify_every:
                 changed |= self._verify_all()
             seen: set[tuple[str, str]] = set()
             for key, files in wanted.items():

@@ -26,6 +26,14 @@ def _copy_doqs(target: Path) -> None:
     shutil.copytree(DOQS / "data", target / "doqs" / "data")
 
 
+@pytest.fixture(autouse=True)
+def git_identity(monkeypatch) -> None:
+    """fabriq commits with the person's git identity; a CI runner has none."""
+    for kind in ("AUTHOR", "COMMITTER"):
+        monkeypatch.setenv(f"GIT_{kind}_NAME", "T")
+        monkeypatch.setenv(f"GIT_{kind}_EMAIL", "t@example.com")
+
+
 @pytest.fixture(scope="session")
 def doqs_checkout() -> Path:
     if not (DOQS / "scripts" / "doqs_api.py").is_file():
