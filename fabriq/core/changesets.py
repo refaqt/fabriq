@@ -12,7 +12,10 @@ The rules it keeps:
 - a library change always goes through a pull request; the machine's pin
   moves only to a merged commit (``bump_pin`` in doqs refuses the rest);
 - a machine commit is refused while a mounted library has local changes
-  (the stray-edit incident), and the panel says which files.
+  (the stray-edit incident), and the panel says which files;
+- a push is refused while a colleague holds the Git LFS lock on one of its
+  FreeCAD files, and the locks this change holds go when its pull request
+  merges or closes.
 """
 from __future__ import annotations
 
@@ -24,7 +27,7 @@ from dataclasses import asdict, dataclass, field
 from pathlib import Path
 
 from fabriq.core import git as g
-from fabriq.core import github, reporting
+from fabriq.core import github, lfs, reporting
 from fabriq.core.jobs import JobContext
 from fabriq.core.workspace import Workspace
 
@@ -47,6 +50,7 @@ class RepoChange:
     pr_state: str | None = None
     merge_commit: str | None = None
     pin_bumped: str | None = None
+    locked: list[str] = field(default_factory=list)   # FreeCAD files whose lock this change holds
     notes: list[str] = field(default_factory=list)
 
 
@@ -72,8 +76,10 @@ def slugify(topic: str) -> str:
 
 
 class ChangeSets:
-    def __init__(self, workspace: Workspace):
+    def __init__(self, workspace: Workspace, locks=None):
         self.workspace = workspace
+        #: The ``LockKeeper``, when Git LFS locks are on.
+        self.locks = locks
         self.store = workspace.local_dir() / "changesets"
         self.store.mkdir(parents=True, exist_ok=True)
 
@@ -187,6 +193,8 @@ class ChangeSets:
                 files = self.dirty_files(path) or repo.files
                 sha = g.commit(path, files, repo.commit_message)
                 repo.commit = sha
+                if self.locks is not None:
+                    repo.locked = [f for f in files if lfs.is_freecad(f) and self.locks.holds(path, f)]
                 repo.notes.append(f"committed {sha[:10]}" if sha else "nothing to commit")
                 if context:
                     context.log(repo.notes[-1])
@@ -200,6 +208,12 @@ class ChangeSets:
                 path = Path(repo.path)
                 if context:
                     context.step(f"{repo.name}: push and open the pull request")
+                if self.locks is not None:
+                    taken = self.locks.colleague_locks(path, [f for f in repo.files if lfs.is_freecad(f)])
+                    if taken:
+                        raise RuntimeError(
+                            "a colleague is working on these FreeCAD files, so this change cannot be "
+                            "merged: " + ", ".join(f"{e['path']} ({e['owner'] or 'someone'})" for e in taken))
                 g.push(path, repo.branch)
                 if repo.pr_url:
                     continue
@@ -225,6 +239,9 @@ class ChangeSets:
                     continue
                 repo.pr_state = state["state"]
                 repo.merge_commit = state.get("merge_commit")
+                if repo.pr_state in ("MERGED", "CLOSED") and repo.locked and self.locks is not None:
+                    repo.notes.extend(self.locks.release(Path(repo.path), repo.locked))
+                    repo.locked = []
         if cs.repos and all(r.pr_state == "MERGED" for r in cs.repos if r.kind != "machine"):
             if cs.state == "pushed":
                 cs.state = "merged"

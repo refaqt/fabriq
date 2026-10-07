@@ -2,6 +2,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { api, type Job, type Model, type Workspace } from "../../app/api";
 import { Badge, Button, Card, Empty, KeyValue } from "../../ui/components";
+import { LockConflicts } from "./Locks";
 
 type GitStatus = Record<string, { git: boolean; branch?: string; head?: string; dirty?: string[]; pins?: { path: string; commit: string; state: string }[]; ahead?: number | null; behind?: number | null }>;
 type FreeCad = { rpc: boolean; gui: string | null; cmd: string | null; mode: string };
@@ -26,6 +27,8 @@ export function HomePage() {
           <Button onClick={() => check.mutate()} disabled={check.isPending}>Run check</Button>
         </div>
       </div>
+
+      <LockConflicts />
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {Object.entries(git.data ?? {}).map(([name, repo]) => (

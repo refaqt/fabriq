@@ -6,3 +6,4 @@ Write entries in B2 English. Follow `.agents/rules/communication.md`.
 | Date | Topic | Role(s) | Images |
 | ---- | ----- | ------- | -----: |
 | 2026-10-07 | [fabriq starts: the shell and the doqs module](2026-10-07_fabriq-starts.md) | software | 0 |
+| 2026-10-07 | [Locks on FreeCAD files](2026-10-07_lfs-locks.md) | software | 0 |

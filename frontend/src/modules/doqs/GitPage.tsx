@@ -2,9 +2,10 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, type Job } from "../../app/api";
 import { Badge, Button, Card, Empty, Field, inputClass, KeyValue } from "../../ui/components";
+import { LockConflicts, LocksCard } from "./Locks";
 
 type GitStatus = Record<string, { path: string; git: boolean; branch?: string; head?: string; dirty?: string[]; pins?: { path: string; commit: string; state: string }[]; ahead?: number | null; behind?: number | null; upstream?: string | null }>;
-type RepoChange = { name: string; path: string; kind: string; branch: string; files: string[]; reports: { command: string }[]; commit_message: string; pr_title: string; pr_body: string; commit: string | null; pr_url: string | null; pr_state: string | null; merge_commit: string | null; pin_bumped: string | null; notes: string[] };
+type RepoChange = { name: string; path: string; kind: string; branch: string; files: string[]; reports: { command: string }[]; commit_message: string; pr_title: string; pr_body: string; commit: string | null; pr_url: string | null; pr_state: string | null; merge_commit: string | null; pin_bumped: string | null; locked?: string[]; notes: string[] };
 type ChangeSet = { id: string; topic: string; comment: string; created: number; state: string; repos: RepoChange[] };
 
 const stateTone = (s: string) => (s === "done" || s === "merged" ? "ok" : s === "draft" ? "muted" : "warn");
@@ -22,6 +23,7 @@ export function GitPage() {
   return (
     <div className="space-y-4">
       <h1 className="text-2xl font-semibold">Git</h1>
+      <LockConflicts />
       <div className="grid gap-4 md:grid-cols-3">
         {Object.entries(git.data ?? {}).map(([name, repo]) => (
           <Card key={name} title={name}>
@@ -35,6 +37,8 @@ export function GitPage() {
           </Card>
         ))}
       </div>
+
+      <LocksCard />
 
       <Card title="New change set">
         <p className="mb-3 text-sm text-muted-foreground">One change across the repositories: a branch with the same name in each, a commit per repository in the order private library, public library, machine, then the pull requests. The commit messages and pull request text are generated from what the commands reported, with your comment under "Why it matters".</p>
@@ -64,6 +68,7 @@ export function GitPage() {
                   {repo.commit && <Badge tone="ok">{repo.commit.slice(0, 10)}</Badge>}
                   {repo.pr_url && <a className="text-primary" href={repo.pr_url} target="_blank" rel="noreferrer">{repo.pr_state ?? "PR"}</a>}
                   {repo.pin_bumped && <Badge tone="ok">pin → {repo.pin_bumped.slice(0, 10)}</Badge>}
+                  {(repo.locked ?? []).length > 0 && <Badge tone="muted">{(repo.locked ?? []).length} locked until the merge</Badge>}
                 </span>
               </summary>
               <div className="mt-3 grid gap-3 lg:grid-cols-2">

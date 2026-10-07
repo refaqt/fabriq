@@ -18,6 +18,12 @@ export function useFabriqEvents(onJob?: (job: unknown) => void) {
     source.addEventListener("git.changed", () => {
       queryClient.invalidateQueries({ queryKey: ["git"] });
     });
+    // A FreeCAD file was locked or released, or a colleague holds a file this person changes.
+    for (const name of ["locks.changed", "lock.conflict"]) {
+      source.addEventListener(name, () => {
+        queryClient.invalidateQueries({ queryKey: ["git", "locks"] });
+      });
+    }
     return () => source.close();
   }, [queryClient, onJob]);
 }
