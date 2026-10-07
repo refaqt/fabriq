@@ -130,11 +130,18 @@ class ChangeSets:
                only: list[str] | None = None, commit_types: tuple[str, ...] = ()) -> ChangeSet:
         branch = f"feat/{slugify(topic)}"
         cs = ChangeSet(id=uuid.uuid4().hex[:10], topic=topic, comment=comment, created=time.time())
+        every = [r for reports in reports_by_root.values() for r in reports]
         for name, path, kind in self.repositories():
             if only and name not in only:
                 continue
             files = self.dirty_files(path)
-            reports = reports_by_root.get(str(path.resolve()), [])
+            key = str(path.resolve())
+            reports = list(reports_by_root.get(key, []))
+            # A command that wrote in several repositories (add-part) names them all.
+            for report in every:
+                roots = {str(Path(r).resolve()) for r in (report.get("facts") or {}).get("roots", [])}
+                if key in roots and report not in reports:
+                    reports.append(report)
             if not files and not reports:
                 continue
             repo = RepoChange(name=name, path=str(path), kind=kind, branch=branch, files=files, reports=reports)

@@ -16,9 +16,12 @@ def gh_available() -> bool:
 
 
 def _gh(path: Path, *args: str, input_text: str | None = None) -> str:
-    if not gh_available():
+    # Resolve through PATH ourselves: on Windows a bare "gh" would skip a
+    # `gh.cmd` that stands earlier on PATH and find `gh.exe` instead.
+    exe = shutil.which("gh")
+    if exe is None:
         raise GitHubError("the gh command line is not installed or not on PATH")
-    result = subprocess.run(["gh", *args], cwd=path, capture_output=True, text=True, input=input_text, timeout=120)
+    result = subprocess.run([exe, *args], cwd=path, capture_output=True, text=True, input=input_text, timeout=120)
     if result.returncode != 0:
         raise GitHubError(result.stderr.strip() or result.stdout.strip() or "gh failed")
     return result.stdout.strip()

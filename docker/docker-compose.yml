@@ -1,0 +1,12 @@
+services:
+  fabriq:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    ports:
+      - "8765:8765"
+    volumes:
+      # The machine repository, with doqs/ and the library checkouts beside it.
+      - ${FABRIQ_WORKSPACE:-../../aqtuator}:/workspace
+      - ${FABRIQ_LIBRARIES:-../..}:/libraries
+      - ~/.config/gh:/root/.config/gh:ro

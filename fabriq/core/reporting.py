@@ -77,7 +77,11 @@ def commit_message(reports: list[dict], comment: str = "", scope: str = "", comm
         kind = "feat" if "feat" in commit_types else commit_types[0]
     scope = scope or _scope(main, "design")
     lines = [one_line(r) for r in reports]
-    first = clip(f"{kind}({scope}): {lines[0][:1].lower() + lines[0][1:]}")
+    head = lines[0]
+    # A plain word starts in lower case after the colon; a part number keeps its case.
+    if head[:1].isupper() and head[1:2].islower():
+        head = head[0].lower() + head[1:]
+    first = clip(f"{kind}({scope}): {head}")
     body = []
     if comment.strip():
         body.append(comment.strip())

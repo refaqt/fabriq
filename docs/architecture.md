@@ -23,6 +23,10 @@ git and GitHub.
 | Jobs | `fabriq/core/jobs.py` | Background work with steps and logs, persisted under `<root>/.fabriq/jobs/` |
 | Events | `fabriq/core/events.py` | Server-sent events: `job.updated`, `model.changed`, `git.changed` |
 | Registry | `fabriq/core/registry.py` | Finds modules through the `fabriq.modules` entry-point group |
+| Git | `fabriq/core/git.py` | Status, branches, commits and pushes through the `git` binary |
+| GitHub | `fabriq/core/github.py` | Pull requests through the `gh` command line, which carries the person's login |
+| Reporting | `fabriq/core/reporting.py` | Commit messages and pull request text in the shape of `.agents/rules/reporting.md`, made from the command reports |
+| Change sets | `fabriq/core/changesets.py` | One change across the repositories: branch, commit, pull request and pin bump, in the order private library, public library, machine |
 | App | `fabriq/app.py` | The FastAPI application: core routes, module routes, the built frontend |
 | doqs module | `fabriq/modules/doqs/` | The design tool: read model, library, parts, interfaces, checks |
 
@@ -33,6 +37,17 @@ The read model (`readmodel.py`) is built from the files in the workspace: every 
 FreeCAD documents (trees, frames, joints, links, read without FreeCAD), and the library rows.
 It is rebuilt when a file changes. Writes go through the doqs commands, as jobs, and the
 report of each command is what the browser shows and what a commit message is made from.
+
+## Change sets
+
+A change set is one change across the repositories it touches. It carries a topic, the
+designer's comment, and one entry per repository with the files git sees as changed and the
+reports of the commands that wrote there. From those reports it generates the commit message
+and the pull request text (editable before use). It then creates the branch `feat/<topic>`
+in each repository, commits in the order private library, public library, machine, pushes,
+opens the pull requests through `gh`, and, after the library pull requests merge, moves the
+machine's pins to the merge commits. A machine commit is refused while a mounted library has
+local changes, and the panel names the files.
 
 ## Jobs and FreeCAD
 
