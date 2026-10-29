@@ -7,3 +7,4 @@ Write entries in B2 English. Follow `.agents/rules/communication.md`.
 | ---- | ----- | ------- | -----: |
 | 2026-10-07 | [fabriq starts: the shell and the doqs module](2026-10-07_fabriq-starts.md) | software | 0 |
 | 2026-10-07 | [Locks on FreeCAD files](2026-10-07_lfs-locks.md) | software | 0 |
+| 2026-10-29 | [Can a program edit our Shopify shop?](2026-10-29_shopify-api.md) | software, marketing | 0 |
