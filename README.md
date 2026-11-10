@@ -45,6 +45,8 @@ uv run pytest
 
 ## Licence
 
+Copyright © 2025–2026 Refaqt (BE 0804.145.539) and contributors. Contributions are accepted under the [Refaqt Contributor Licence Agreement](https://github.com/refaqt/.github/blob/main/CLA.md).
+
 fabriq is software: [GPL-3.0-or-later](LICENSE). The documentation under `docs/` is
 [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/). The REFAQT and DOQS names
 and logos are trademarks and are not covered by these licences.
