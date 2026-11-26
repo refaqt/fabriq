@@ -11,3 +11,6 @@ frontend/dist/
 fabriq/static/*
 !fabriq/static/.gitkeep
 .env
+
+# Skill links made by .agents/scripts/link_skills.sh at the start of each session.
+/.claude/skills/
