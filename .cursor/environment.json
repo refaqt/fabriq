@@ -1,0 +1,4 @@
+{
+  "name": "fabriq",
+  "install": "bash .claude/hooks/session-start.sh"
+}
